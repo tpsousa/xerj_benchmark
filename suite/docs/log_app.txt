@@ -1,0 +1,10 @@
+2026-11-18 09:12:03 INFO  Application started on port 8080
+2026-11-18 09:15:41 INFO  POST /api/v1/reviews 200 1840ms
+2026-11-18 09:16:02 WARN  Rate limit approaching for 10.0.0.7
+2026-11-18 09:17:55 ERROR POST /api/v1/tests 502 AiUnavailableException: provider timeout
+2026-11-18 09:18:10 INFO  POST /api/v1/explanations 200 920ms
+2026-11-18 09:21:33 ERROR POST /api/v1/reviews 502 AiUnavailableException: invalid api key
+2026-11-18 09:22:01 INFO  GET /api/v1/history 200 35ms
+2026-11-18 09:25:47 ERROR POST /api/v1/reviews 429 Too many requests
+2026-11-18 09:30:00 INFO  POST /api/v1/reviews 200 2210ms
+Incident note: the invalid api key error was fixed at 09:24 by replacing AI_API_KEY.

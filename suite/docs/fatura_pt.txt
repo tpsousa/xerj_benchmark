@@ -1,0 +1,17 @@
+FATURA Nº 2026-00731
+Emitente: Alfa Tecnologia Ltda. (CNPJ 12.345.678/0001-90)
+Cliente: Beta Comércio de Alimentos S.A.
+Data de emissão: 05/11/2026
+Vencimento: 20/11/2026
+Pedido de compra: PC-8841
+
+Itens:
+1) Licença de software ......... R$ 2.500,00
+2) Suporte técnico (3 meses) ... R$ 1.350,50
+3) Treinamento remoto .......... R$ 800,00
+
+Subtotal: R$ 4.650,50
+Desconto (5%): R$ 232,53
+Total a pagar: R$ 4.417,97
+Forma de pagamento: boleto bancário
+Observação: após o vencimento, multa de 2% e juros de 1% ao mês.

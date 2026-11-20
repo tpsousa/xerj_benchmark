@@ -1,0 +1,50 @@
+id,doc,question,kind,expected,expected_status,category,lang,ref_date
+F01,fatura_pt.txt,Qual é o número da fatura?,text,2026-00731,ANSWER,extract,pt,
+F02,fatura_pt.txt,Qual é o valor total a pagar?,money,4417.97,ANSWER,extract,pt,
+F03,fatura_pt.txt,Qual é a data de vencimento?,date,2026-11-20,ANSWER,date_format,pt,
+F04,fatura_pt.txt,Qual é a data de emissão?,date,2026-11-05,ANSWER,date_format,pt,
+F05,fatura_pt.txt,Quantos dias há entre a emissão e o vencimento?,number,15,ANSWER,compute,pt,
+F06,fatura_pt.txt,Qual é o número do pedido de compra?,text,PC-8841,ANSWER,extract,pt,
+F07,fatura_pt.txt,Qual é o CNPJ do emitente?,text,12.345.678/0001-90,ANSWER,extract,pt,
+F08,fatura_pt.txt,Qual é a diferença entre o subtotal e o total a pagar?,money,232.53,ANSWER,compute,pt,
+F09,fatura_pt.txt,A fatura aceita pagamento por cartão de crédito?,yesno,no,ANSWER,yesno,pt,
+F10,fatura_pt.txt,Quem é o diretor financeiro do cliente?,text,,ABSENT,absent,pt,
+F11,fatura_pt.txt,Qual é o percentual da multa por atraso?,pct,2,ANSWER,extract,pt,
+F12,fatura_pt.txt,Qual é a soma dos itens de licença e suporte técnico?,money,3850.50,ANSWER,compute,pt,
+L01,log_app.txt,How many ERROR lines are there?,number,3,ANSWER,count,en,
+L02,log_app.txt,At what time did the first ERROR occur?,time,09:17:55##9:17:55,ANSWER,extract,en,
+L03,log_app.txt,What was the longest request duration in ms?,number,2210,ANSWER,compute,en,
+L04,log_app.txt,What port does the application listen on?,number,8080,ANSWER,extract,en,
+L05,log_app.txt,What was the error message of the 502 on /api/v1/tests?,text,~provider timeout,ANSWER,extract,en,
+L06,log_app.txt,At what time was the invalid api key error fixed?,time,09:24##09:24:00,ANSWER,extract,en,
+L07,log_app.txt,Which IP address triggered the rate limit warning?,text,10.0.0.7,ANSWER,extract,en,
+L08,log_app.txt,Who deployed the fix?,text,,ABSENT,absent,en,
+L09,log_app.txt,How many requests returned status 200?,number,4,ANSWER,count,en,
+E01,email_pt.txt,Qual é a data da reunião de alinhamento?,date,2026-10-22,ANSWER,ref_date,pt,2026-10-14
+E02,email_pt.txt,Quantos dias separam o prazo do relatório preliminar do prazo do relatório final?,number,14,ANSWER,ref_date,pt,2026-10-14
+E03,email_pt.txt,Quanto do orçamento aprovado ainda não foi liberado?,money,11500.00,ANSWER,compute,pt,2026-10-14
+E04,email_pt.txt,Em que sala será a reunião?,text,~3,ANSWER,extract,pt,2026-10-14
+E05,email_pt.txt,Quem vai apresentar os resultados?,text,Marcos,ANSWER,conditional,pt,2026-10-14
+E06,email_pt.txt,A que horas começa a reunião?,time,14:30##14h30##14:30:00,ANSWER,extract,pt,2026-10-14
+E07,email_pt.txt,Quem sugeriu marcar a reunião na quarta-feira?,text,Thiago,ANSWER,quoted_reply,pt,2026-10-14
+E08,email_pt.txt,Qual é o telefone da Carla?,text,,ABSENT,absent,pt,2026-10-14
+E09,email_pt.txt,Quantos dias faltam de hoje até o prazo do relatório preliminar?,number,16,ANSWER,ref_date,pt,2026-10-14
+C01,contrato_pt.txt,Qual é o valor mensal do contrato?,money,7200.00,ANSWER,extract,pt,
+C02,contrato_pt.txt,Qual é a duração do contrato?,duration,~12,ANSWER,extract,pt,
+C03,contrato_pt.txt,Qual é o prazo de aviso prévio para rescisão?,duration,~30,ANSWER,extract,pt,
+C04,contrato_pt.txt,"Qual é o valor da multa por rescisão sem aviso prévio, em reais?",money,14400.00,ANSWER,word_number,pt,
+C05,contrato_pt.txt,Por quantos anos vale a confidencialidade após o término?,number,5,ANSWER,extract,pt,
+C06,contrato_pt.txt,Qual é o foro eleito?,text,~São Luís,ANSWER,extract,pt,
+C07,contrato_pt.txt,Qual é a data de início da vigência?,date,2026-02-01,ANSWER,date_format,pt,
+C08,contrato_pt.txt,O contrato permite subcontratação?,yesno,,ABSENT,absent,pt,
+C09,contrato_pt.txt,Qual é o valor total pago em 12 meses?,money,86400.00,ANSWER,compute,pt,
+C10,contrato_pt.txt,Qual é o nome da CONTRATANTE?,text,,ABSENT,absent,pt,
+R01,readme_en.txt,What is the default value of RATE_LIMIT_RPM?,number,10,ANSWER,table,en,
+R02,readme_en.txt,What is the default AI model?,text,llama-3.3-70b-versatile,ANSWER,table,en,
+R03,readme_en.txt,Which HTTP status code means the provider failed?,number,502,ANSWER,extract,en,
+R04,readme_en.txt,What is the maximum number of characters accepted per request?,number,8000,ANSWER,extract,en,
+R05,readme_en.txt,Which license does the application use?,text,MIT,ANSWER,extract,en,
+R06,readme_en.txt,How many variables are listed in the table?,number,5,ANSWER,count,en,
+R07,readme_en.txt,What is the default port?,number,8080,ANSWER,table,en,
+R08,readme_en.txt,Does the application support OAuth login?,yesno,,ABSENT,absent,en,
+R09,readme_en.txt,Who maintains the project?,text,,ABSENT,absent,en,
