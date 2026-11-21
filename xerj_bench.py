@@ -86,14 +86,15 @@ def validate(cases, docs):
 
 # ----------------------------------------------------------------------------- API
 
-def call_api(base_url, key, payload, timeout=70, max_retries=5):
+def call_api(base_url, key, payload, timeout=70, max_retries=5, user_agent="xerj-bench/1.1 (benchmark script)"):
     body = json.dumps(payload).encode("utf-8")
     idem = str(uuid.uuid4())  # same key on retries: a repeated call is read and billed once
     for attempt in range(max_retries + 1):
         req = urllib.request.Request(
             base_url.rstrip("/") + "/answers", data=body, method="POST",
             headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
-                     "Idempotency-Key": idem})
+                     "Idempotency-Key": idem, "Accept": "application/json",
+                     "User-Agent": user_agent})
         t0 = time.perf_counter()
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -146,10 +147,13 @@ def run_suite(args, cases, docs, out_dir: Path):
                            "questions": [question_obj(c, args.send_types) for c in chunk]}
                 if ref_date:
                     payload["ref_date"] = ref_date
-                out = call_api(args.base_url, key, payload)
+                out = call_api(args.base_url, key, payload, user_agent=args.user_agent)
                 calls += 1
                 status = "ok" if out["ok"] else f"ERRO {out.get('http')}"
                 print(f"[{calls}] {doc_name} ({len(chunk)} perguntas): {status}, {out['wall_ms']} ms")
+                if not out["ok"]:
+                    print(f"    corpo do erro: {str(out.get('error'))[:300]}")
+                    print(f"    request_id: {out.get('request_id')}")
                 raw.write(json.dumps({
                     "doc": doc_name, "ref_date": ref_date, "ids": [c["id"] for c in chunk],
                     "request_id": out.get("request_id"), "ok": out["ok"], "http": out.get("http"),
@@ -167,6 +171,10 @@ def run_suite(args, cases, docs, out_dir: Path):
                         results[c["id"]] = {"res": None, "request_id": out.get("request_id"),
                                             "wall_ms": out["wall_ms"],
                                             "error": f"HTTP {out.get('http')}: {out.get('error')}"}
+                if not out["ok"] and out.get("http") in (401, 402, 403) and calls == 1:
+                    print("\nA primeira chamada falhou com erro de autenticacao/acesso. Abortando para nao repetir o erro.")
+                    print("Veja o corpo do erro acima e a pagina https://platform.xerj.ai/docs/errors")
+                    sys.exit(2)
                 if args.delay:
                     time.sleep(args.delay)
     return results
@@ -386,6 +394,8 @@ def main():
     ap.add_argument("--limit", type=int, help="rodar só as N primeiras perguntas")
     ap.add_argument("--price-per-m", type=float, default=0.01, help="US$ por 1M tokens de entrada")
     ap.add_argument("--delay", type=float, default=0.0, help="pausa (s) entre chamadas")
+    ap.add_argument("--user-agent", default="xerj-bench/1.1 (benchmark script)",
+                    help="User-Agent enviado (o Cloudflare bloqueia o padrão do Python com erro 1010)")
     ap.add_argument("--dry-run", action="store_true", help="validar a suíte sem chamar a API")
     args = ap.parse_args()
 
