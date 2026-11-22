@@ -1,0 +1,16 @@
+BOLETO DE COBRANÇA
+Banco: Banco Meridional S.A. (código 237)
+Beneficiário: Academia Corpo & Mente Ltda.
+CNPJ do beneficiário: 22.333.444/0001-55
+Pagador: Cliente Fictício da Silva
+Nosso número: 123456789-0
+Número do documento: MENS-2026-11
+Data do documento: 01/11/2026
+Vencimento: 10/11/2026
+Valor do documento: R$ 189,90
+Desconto para pagamento até o vencimento: R$ 10,00
+Valor cobrado até o vencimento: R$ 179,90
+Multa após o vencimento: 2%
+Juros de mora: 0,033% ao dia
+Linha digitável: 23790.12345 60000.123456 78901.234567 8 98760000017990
+Instruções: Pagável em qualquer banco até o vencimento. Não receber após 30 dias do vencimento.

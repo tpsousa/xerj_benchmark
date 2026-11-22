@@ -1,0 +1,31 @@
+DANFE - DOCUMENTO AUXILIAR DA NOTA FISCAL ELETRÔNICA
+NF-e Nº 000.045.318   Série 1
+Chave de acesso: 2126 1145 6789 0100 0123 5500 1000 0453 1811 2345 6789
+Natureza da operação: Venda de mercadoria
+Data de emissão: 12/11/2026   Hora: 14:32:10
+
+EMITENTE
+Razão social: Distribuidora Horizonte Ltda.
+CNPJ: 45.678.901/0001-23   IE: 123456789
+Cidade/UF: Imperatriz/MA
+
+DESTINATÁRIO
+Razão social: Mercadinho Bom Preço Eireli
+CNPJ: 98.765.432/0001-10
+Cidade/UF: São Luís/MA
+
+ITENS
+Cód  Descrição             Un   Qtd  Vl. Unit.  Vl. Total
+001  Arroz tipo 1 5kg      PCT   40     21,90     876,00
+002  Feijão carioca 1kg    PCT   60      8,50     510,00
+003  Óleo de soja 900ml    UN   120      6,25     750,00
+004  Açúcar cristal 1kg    PCT   80      4,80     384,00
+
+Valor dos produtos: R$ 2.520,00
+Frete: R$ 150,00
+Desconto: R$ 70,00
+Valor total da nota: R$ 2.600,00
+ICMS (12%): R$ 302,40
+Transportadora: Rápido Norte Transportes
+Peso bruto: 410,5 kg
+Informações adicionais: Entrega agendada para 16/11/2026. Mercadoria sujeita a conferência no ato do recebimento.

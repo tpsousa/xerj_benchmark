@@ -1,0 +1,15 @@
+CONTRATO DE PRESTAÇÃO DE SERVIÇOS
+
+Cláusula 1 - Objeto. A CONTRATADA prestará serviços de desenvolvimento de software à CONTRATANTE.
+
+Cláusula 2 - Prazo. O contrato tem vigência de 12 meses, a partir de 01/02/2026, renovável por igual período.
+
+Cláusula 3 - Preço. O valor mensal é de R$ 7.200,00, pago até o quinto dia útil de cada mês.
+
+Cláusula 4 - Rescisão. Qualquer parte pode rescindir o contrato mediante aviso prévio de 30 dias.
+
+Cláusula 5 - Multa. Em caso de rescisão sem aviso prévio, a parte infratora pagará multa equivalente a duas mensalidades.
+
+Cláusula 6 - Confidencialidade. As partes manterão sigilo sobre as informações trocadas durante a vigência e por 5 anos após o término.
+
+Cláusula 7 - Foro. Fica eleito o foro da comarca de São Luís - MA.

@@ -24,6 +24,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 import time
 import uuid
@@ -186,6 +187,67 @@ def norm(s) -> str:
     return " ".join(str(s).casefold().split())
 
 
+PT_MONTHS = {"janeiro": 1, "fevereiro": 2, "março": 3, "marco": 3, "abril": 4, "maio": 5, "junho": 6,
+             "julho": 7, "agosto": 8, "setembro": 9, "outubro": 10, "novembro": 11, "dezembro": 12}
+
+
+def parse_numbers(text):
+    """Extrai números de um texto aceitando 1.234,56 (pt-BR) e 1,234.56 (en)."""
+    out = []
+    for tok in re.findall(r"-?\d[\d.,]*", str(text)):
+        s = tok.rstrip(".,")
+        if "," in s and "." in s:
+            s = s.replace(".", "").replace(",", ".") if s.rfind(",") > s.rfind(".") else s.replace(",", "")
+        elif "," in s:
+            s = s.replace(",", ".")
+        elif "." in s and re.fullmatch(r"-?\d{1,3}(\.\d{3})+", s):
+            s = s.replace(".", "")
+        try:
+            out.append(Decimal(s))
+        except InvalidOperation:
+            pass
+    return out
+
+
+def parse_dates(text):
+    """Datas como (ano|None, mês, dia): 20/11/2026, 2026-11-20, '22 de outubro [de 2026]'."""
+    out = []
+    for d, m, y in re.findall(r"\b(\d{1,2})/(\d{1,2})/(\d{4})\b", str(text)):
+        out.append((int(y), int(m), int(d)))
+    for y, m, d in re.findall(r"\b(\d{4})-(\d{2})-(\d{2})\b", str(text)):
+        out.append((int(y), int(m), int(d)))
+    for d, mon, y in re.findall(r"\b(\d{1,2})\s*º?\s+de\s+([A-Za-zçÇãÃ]+)(?:\s+de\s+(\d{4}))?", str(text)):
+        month = PT_MONTHS.get(mon.lower())
+        if month:
+            out.append((int(y) if y else None, month, int(d)))
+    return out
+
+
+def lenient_match(kind, expected, text) -> bool:
+    """O conteúdo da resposta está certo, mesmo sem valor tipado? Só para number/money/pct/date,
+    e só quando o texto tem exatamente um número ou uma data (evita acertos por coincidência)."""
+    if not text or kind not in ("number", "money", "pct", "date"):
+        return False
+    for alt in (a.strip() for a in expected.split("##")):
+        if alt.startswith("~"):
+            continue
+        try:
+            if kind == "date":
+                dates = parse_dates(text)
+                y, m, d = map(int, alt.split("-"))
+                if len(dates) == 1 and dates[0][1:] == (m, d) and dates[0][0] in (None, y):
+                    return True
+            else:
+                nums = parse_numbers(text)
+                exp = Decimal(alt.split()[0].rstrip("%"))
+                targets = {exp, abs(exp)} | ({exp / 100} if kind == "pct" else set())
+                if len(nums) == 1 and (nums[0] in targets or abs(nums[0]) in targets):
+                    return True
+        except (InvalidOperation, ValueError, IndexError):
+            continue
+    return False
+
+
 def match_one(kind, exp, res) -> bool:
     val, text = res.get("value"), res.get("value_text")
     shown = text if text is not None else val
@@ -231,7 +293,11 @@ def classify(case, res):
     if status == "ANSWER":
         if not exp_answer:
             return "hallucination"
-        return "correct" if matches(case["kind"], case["expected"], res) else "wrong"
+        if matches(case["kind"], case["expected"], res):
+            return "correct"
+        if lenient_match(case["kind"], case["expected"], res.get("value_text")):
+            return "content_ok"      # conteúdo certo, mas sem valor tipado
+        return "wrong"
     return "missed" if exp_answer else "correct_decline"
 
 
@@ -274,12 +340,15 @@ def sweep(rows, bar):
     absent = [r for r in rows if r["expected_status"] == "ABSENT"]
     answered = [r for r in rows if r["status"] == "ANSWER" and (bar is None or r["confidence"] > bar)]
     correct = [r for r in answered if r["outcome"] == "correct"]
+    untyped = [r for r in answered if r["outcome"] == "content_ok"]
     wrong = [r for r in answered if r["outcome"] in ("wrong", "hallucination")]
     cov = len([r for r in answered if r["expected_status"] == "ANSWER"]) / len(answerable) if answerable else 0
     prec = len(correct) / len(answered) if answered else 0
+    prec_len = (len(correct) + len(untyped)) / len(answered) if answered else 0
     fp = len([r for r in answered if r["expected_status"] == "ABSENT"]) / len(absent) if absent else 0
-    return {"bar": bar, "answered": len(answered), "correct": len(correct), "wrong": len(wrong),
-            "coverage": cov, "precision": prec, "absent_fp": fp}
+    return {"bar": bar, "answered": len(answered), "correct": len(correct), "untyped": len(untyped),
+            "wrong": len(wrong), "coverage": cov, "precision": prec, "precision_lenient": prec_len,
+            "absent_fp": fp}
 
 
 def pctl(values, p):
@@ -304,52 +373,58 @@ def build_report(rows, bars, args):
     total = len(rows)
     answerable = [r for r in rows if r["expected_status"] == "ANSWER"]
     absent = [r for r in rows if r["expected_status"] == "ABSENT"]
-    by = lambda o: [r for r in rows if r["outcome"] == o]
-    L += [f"# XERJ Reader-1: relatório do benchmark", "",
+    cnt = lambda rs, o: len([r for r in rs if r["outcome"] == o])
+    L += ["# XERJ Reader-1: relatório do benchmark", "",
           f"- Data: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+          f"- Suíte: {args.suite}",
           f"- Modo de tipos: {'explícito (--send-types)' if args.send_types else 'automático (inferido da pergunta)'}",
           f"- Perguntas: {total} ({len(answerable)} com resposta no texto, {len(absent)} sem resposta no texto)", ""]
 
     L += ["## Resultado sem barra de confiança", "",
           "| Resultado | Qtde |", "|---|---|",
-          f"| Corretas | {len(by('correct'))} |",
-          f"| Erradas (valor incorreto) | {len(by('wrong'))} |",
-          f"| Perdidas (recusou, mas a resposta existia) | {len(by('missed'))} |",
-          f"| Recusas corretas (ABSENT/UNKNOWN) | {len(by('correct_decline'))} |",
-          f"| Alucinações (respondeu algo que não está no texto) | {len(by('hallucination'))} |",
-          f"| Erros de API | {len(by('error'))} |", ""]
+          f"| Corretas (valor tipado certo) | {cnt(rows, 'correct')} |",
+          f"| Conteúdo certo, mas valor não tipado | {cnt(rows, 'content_ok')} |",
+          f"| Erradas (valor incorreto) | {cnt(rows, 'wrong')} |",
+          f"| Perdidas (recusou, mas a resposta existia) | {cnt(rows, 'missed')} |",
+          f"| Recusas corretas (ABSENT/UNKNOWN...) | {cnt(rows, 'correct_decline')} |",
+          f"| Alucinações (respondeu algo que não está no texto) | {cnt(rows, 'hallucination')} |",
+          f"| Erros de API | {cnt(rows, 'error')} |", ""]
+    severe = [r for r in rows if r["outcome"] in ("wrong", "hallucination") and r["confidence"] >= 0.9]
+    L += [f"Respostas erradas com confiança >= 0,90 (nenhuma barra consegue filtrar): **{len(severe)}**", ""]
 
     L += ["## Varredura da barra `min_confidence`", "",
-          "Cobertura = perguntas respondíveis que receberam resposta. Precisão = respostas corretas entre as dadas. "
-          "Falso positivo ABSENT = respondeu uma pergunta sem resposta no texto.", "",
-          "| Barra | Respondidas | Corretas | Erradas | Cobertura | Precisão | Falso positivo ABSENT |",
-          "|---|---|---|---|---|---|---|"]
+          "Cobertura = perguntas respondíveis que receberam resposta. Precisão estrita exige o valor tipado certo; "
+          "a tolerante também aceita conteúdo certo sem tipo. Falso positivo ABSENT = respondeu uma pergunta "
+          "sem resposta no texto.", "",
+          "| Barra | Respondidas | Corretas | Conteúdo certo | Erradas | Cobertura | Precisão estrita | Precisão tolerante | FP ABSENT |",
+          "|---|---|---|---|---|---|---|---|---|"]
     table = [sweep(rows, None)] + [sweep(rows, b) for b in bars]
     for s in table:
         label = "sem barra" if s["bar"] is None else f"> {s['bar']}"
-        L.append(f"| {label} | {s['answered']} | {s['correct']} | {s['wrong']} | {s['coverage']:.0%} | "
-                 f"{s['precision']:.0%} | {s['absent_fp']:.0%} |")
+        L.append(f"| {label} | {s['answered']} | {s['correct']} | {s['untyped']} | {s['wrong']} | {s['coverage']:.0%} | "
+                 f"{s['precision']:.0%} | {s['precision_lenient']:.0%} | {s['absent_fp']:.0%} |")
     clean = [s for s in table[1:] if s["wrong"] == 0 and s["answered"] > 0]
     L += ["", (f"Menor barra testada sem nenhuma resposta errada: **> {clean[0]['bar']}** "
                f"(cobertura {clean[0]['coverage']:.0%}).") if clean else
           "Nenhuma das barras testadas eliminou todas as respostas erradas.", ""]
 
-    L += ["## Por categoria", "", "| Categoria | N | Corretas | Erradas | Perdidas | Recusas corretas | Alucinações |",
-          "|---|---|---|---|---|---|---|"]
-    cats = defaultdict(list)
-    for r in rows:
-        cats[r["category"]].append(r)
-    for cat, rs in sorted(cats.items()):
-        n = lambda o: len([r for r in rs if r["outcome"] == o])
-        L.append(f"| {cat} | {len(rs)} | {n('correct')} | {n('wrong')} | {n('missed')} | {n('correct_decline')} | {n('hallucination')} |")
+    def group_table(title, key):
+        groups = defaultdict(list)
+        for r in rows:
+            groups[r[key]].append(r)
+        out = [f"## {title}", "",
+               "| Grupo | N | Corretas | Conteúdo certo | Erradas | Perdidas | Recusas corretas | Alucinações | Acerto tolerante |",
+               "|---|---|---|---|---|---|---|---|---|"]
+        for k, rs in sorted(groups.items()):
+            good = cnt(rs, "correct") + cnt(rs, "content_ok") + cnt(rs, "correct_decline")
+            out.append(f"| {k} | {len(rs)} | {cnt(rs, 'correct')} | {cnt(rs, 'content_ok')} | {cnt(rs, 'wrong')} | "
+                       f"{cnt(rs, 'missed')} | {cnt(rs, 'correct_decline')} | {cnt(rs, 'hallucination')} | {good / len(rs):.0%} |")
+        return out + [""]
 
-    L += ["", "## Por idioma", "", "| Idioma | N | Acertos (corretas + recusas corretas) |", "|---|---|---|"]
-    langs = defaultdict(list)
-    for r in rows:
-        langs[r["lang"]].append(r)
-    for lang, rs in sorted(langs.items()):
-        good = len([r for r in rs if r["outcome"] in ("correct", "correct_decline")])
-        L.append(f"| {lang} | {len(rs)} | {good} ({good / len(rs):.0%}) |")
+    L += group_table("Por tipo de resposta (kind)", "kind")
+    L += group_table("Por categoria", "category")
+    L += group_table("Por documento", "doc")
+    L += group_table("Por idioma", "lang")
 
     ev_ok = sum(r["evidence_ok"] for r in rows)
     ev_n = sum(r["evidence_n"] for r in rows)
@@ -358,14 +433,14 @@ def build_report(rows, bars, args):
     cost = in_tok * args.price_per_m / 1_000_000
     ms = [r["ms_total"] for r in rows]
     wall = sorted({(r["request_id"], r["wall_ms"]) for r in rows if r["wall_ms"] is not None})
-    L += ["", "## Integridade da evidência, custo e latência", "",
+    L += ["## Integridade da evidência, custo e latência", "",
           f"- Evidência íntegra (`quote == document[start:end]`): {ev_ok}/{ev_n}"
           + (f" ({ev_ok / ev_n:.0%})" if ev_n else ""),
           f"- Tokens: {in_tok} de entrada, {out_tok} de saída. Custo estimado: US$ {cost:.6f} (a US$ {args.price_per_m}/1M de entrada)",
           f"- Latência do servidor por pergunta (ms): p50 {pctl(ms, 50):.0f}, p95 {pctl(ms, 95):.0f}",
           f"- Latência por chamada de lote (ms): p50 {pctl([w for _, w in wall], 50):.0f}, p95 {pctl([w for _, w in wall], 95):.0f}", ""]
 
-    bad = [r for r in rows if r["outcome"] in ("wrong", "hallucination", "missed", "error")]
+    bad = [r for r in rows if r["outcome"] in ("wrong", "hallucination", "missed", "error", "content_ok")]
     L += ["## Falhas para revisar e reportar", ""]
     if not bad:
         L += ["Nenhuma falha neste conjunto."]
@@ -435,8 +510,8 @@ def main():
     (out_dir / "report.md").write_text(report, encoding="utf-8")
 
     s = sweep(rows, None)
-    print(f"\nSem barra: cobertura {s['coverage']:.0%}, precisão {s['precision']:.0%}, "
-          f"falso positivo em ABSENT {s['absent_fp']:.0%}")
+    print(f"\nSem barra: cobertura {s['coverage']:.0%}, precisão estrita {s['precision']:.0%}, "
+          f"tolerante {s['precision_lenient']:.0%}, falso positivo em ABSENT {s['absent_fp']:.0%}")
     print(f"Relatório: {out_dir / 'report.md'}")
 
 

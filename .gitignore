@@ -1,0 +1,6 @@
+.env
+results*/
+pt_*/
+__pycache__/
+suite_real/*
+!suite_real/README.md

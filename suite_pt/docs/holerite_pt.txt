@@ -1,0 +1,18 @@
+RECIBO DE PAGAMENTO DE SALÁRIO
+Empresa: Tecnosul Soluções Ltda.   CNPJ: 11.222.333/0001-44
+Funcionário: Colaborador Fictício   Matrícula: 004512
+Cargo: Analista de Sistemas   Admissão: 03/02/2023
+Competência: Outubro/2026
+
+Código  Descrição              Referência  Proventos   Descontos
+001     Salário base           30 dias      6.800,00
+015     Horas extras 50%       10 h           425,00
+101     INSS                   -                          828,38
+102     IRRF                   -                          512,40
+110     Vale-transporte (6%)   6%                         408,00
+120     Plano de saúde         -                          180,00
+
+Total de proventos: R$ 7.225,00
+Total de descontos: R$ 1.928,78
+Líquido a receber: R$ 5.296,22
+FGTS do mês (8%): R$ 578,00

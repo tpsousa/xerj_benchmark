@@ -1,0 +1,10 @@
+[18/11/2026 10:02:11] INFO  Servidor iniciado na porta 9090
+[18/11/2026 10:05:43] INFO  Requisição GET /clientes concluída em 120 ms
+[18/11/2026 10:07:19] AVISO Uso de memória em 82%
+[18/11/2026 10:09:55] ERRO  Falha ao conectar ao banco: timeout após 30 s
+[18/11/2026 10:10:20] INFO  Reconexão ao banco bem-sucedida
+[18/11/2026 10:14:02] INFO  Requisição POST /pedidos concluída em 480 ms
+[18/11/2026 10:21:37] ERRO  Requisição POST /pagamentos falhou com status 500
+[18/11/2026 10:22:05] AVISO Uso de memória em 91%
+[18/11/2026 10:30:00] INFO  Requisição GET /produtos concluída em 95 ms
+Resumo: 2 erros e 2 avisos registrados entre 10:00 e 10:30.

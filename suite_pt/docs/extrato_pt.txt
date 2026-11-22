@@ -1,0 +1,15 @@
+EXTRATO DE CONTA CORRENTE
+Banco Meridional - Agência 1234 - Conta 56789-0
+Período: 01/10/2026 a 31/10/2026
+
+Data        Descrição                       Valor (R$)  Saldo (R$)
+01/10/2026  Saldo anterior                                 2.350,00
+03/10/2026  PIX recebido - Cliente A           1.200,00    3.550,00
+05/10/2026  Compra débito - Supermercado        -320,45    3.229,55
+08/10/2026  Pagamento boleto - Energia          -210,30    3.019,25
+12/10/2026  Transferência recebida               800,00    3.819,25
+15/10/2026  Compra débito - Farmácia             -89,90    3.729,35
+20/10/2026  Pagamento boleto - Internet         -119,90    3.609,45
+25/10/2026  PIX enviado - Aluguel             -1.500,00    2.109,45
+28/10/2026  Tarifa mensal                        -29,90    2.079,55
+31/10/2026  Saldo final                                    2.079,55
